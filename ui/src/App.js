@@ -1,18 +1,33 @@
 import React, { Component } from 'react';
+import { Router, Switch, Route, Redirect } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import routes from './routes/';
+
 import logo from './logo.svg';
 import './App.css';
+
+import Header from './components/header';
+
+const hist = createBrowserHistory();
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <Header />
+        <Router history={hist}>
+          <Switch>
+            {routes.map((prop, key) => {
+              if (prop.redirect) return <Redirect from={prop.path} to={prop.pathTo} key={key} />;
+              if (prop.collapse)
+                // eslint-disable-next-line
+                return prop.views.map((prop, key) => (
+                  <Route path={prop.path} component={prop.component} key={key} />
+                ));
+              return <Route path={prop.path} component={prop.component} key={key} />;
+            })}
+          </Switch>
+        </Router>
       </div>
     );
   }
