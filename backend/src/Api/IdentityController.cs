@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using System.Web.Security;
 using Umbraco.Web.WebApi;
 using Umbraco.Core.Services;
@@ -10,7 +11,8 @@ using ReactUmbraco.ViewModels;
 
 namespace ReactUmbraco.Api
 {
-	[Route("api/[controller]")]
+    [EnableCors("*", "*", "*")]
+    [Route("api/[controller]")]
 	public class IdentityApiController : UmbracoApiController
 	{
 	    private readonly IMemberService _memberService;

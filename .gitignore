@@ -1,3 +1,5 @@
 backend/packages
 backend/src/bin
 backend/src/obj
+backend/src/App_Data
+ReactUmbraco
