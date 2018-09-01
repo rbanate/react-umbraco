@@ -22,6 +22,13 @@ const compare = (string1, string2) => {
   return false;
 };
 
+const ArrayNotEmpty = source => {
+  // console.log(!Array(source), Array(source).length !== 0);
+  if (!Array(source) || Array(source).length === 0) return false;
+
+  return Array(source).length !== 0;
+};
+
 const verifyNumber = value => {
   const numberRex = new RegExp('^[0-9]+$');
   if (numberRex.test(value)) {
@@ -86,7 +93,14 @@ export const onChangeTriggerValidator = (
       if (verifyUrl(event.target.value)) {
         onValidValue();
       } else {
+        onInvalidValue();
+      }
+      break;
+    case ValidationType.ArrayLength:
+      if (ArrayNotEmpty(event)) {
         onValidValue();
+      } else {
+        onInvalidValue();
       }
       break;
     default:

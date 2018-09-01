@@ -10,6 +10,7 @@ const ValidationType = {
   MinValue: 9,
   MaxValue: 10,
   Range: 11,
+  ArrayLength: 12,
 };
 
 export const validationStatus = {

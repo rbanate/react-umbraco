@@ -26,10 +26,10 @@ class Home extends React.Component {
         direction="column"
         className={classes.root}
       >
-        <Grid item xs={6}>
+        <Grid item xs={12}>
           <Typography variant="title">Personal Information</Typography>
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={12}>
           <RegistrationForm />
         </Grid>
       </Grid>
