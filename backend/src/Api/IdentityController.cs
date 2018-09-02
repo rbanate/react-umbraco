@@ -96,7 +96,7 @@ namespace ReactUmbraco.Api
                 DateOfBirth = member.GetValue<DateTime?>("dateOfBirth"),
                 Address = member.GetValue<string>("address"),
                 PassportNumber = member.GetValue<string>("passportNumber"),
-                DocumentType = member.GetValue<string>("documentType"),
+                DocumentType = member.GetValue<string>("identityDocType"),
 
                 MandatoryDocuments = mandatoryDocsMedia,
                 SupportingDocuments = supportingDocsMedia,
@@ -159,12 +159,15 @@ namespace ReactUmbraco.Api
 
             if (memberExists) return Ok(new { error = "Username already exists" });
 
-            var createdMember = _memberService.CreateWithIdentity(member.Email, member.Email, member.Password,
+            var createdMember = _memberService.CreateMemberWithIdentity(member.Email, member.Email,
+                $"{member.Firstname} {member.Lastname}",
                 "member");
+
+            _memberService.SavePassword(createdMember, member.Password);
 
             PopulateCustomFields(createdMember, member);
 
-            _memberService.Save(createdMember, false);
+            _memberService.Save(createdMember);
 
             return Ok(new { memberInfo = createdMember });
         }
@@ -237,6 +240,7 @@ namespace ReactUmbraco.Api
                 var mandatoryDocsLink = SaveDocumentsToMedia(upload.MandatoryDocuments, member.Id);
 
                 member.SetValue("mandatoryDocument", mandatoryDocsLink);
+                member.SetValue("identityDocType", (int)upload.DocumentType);
 
                 if (upload.SupportingDocuments != null)
                 {
@@ -263,7 +267,7 @@ namespace ReactUmbraco.Api
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                return Ok(new { error = e });
+                return Ok(new { error = upload });
             }
 
 

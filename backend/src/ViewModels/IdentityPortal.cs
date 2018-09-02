@@ -20,7 +20,7 @@ namespace ReactUmbraco.ViewModels
             if (string.IsNullOrEmpty(Lastname)) yield return new ValidationResult("Please provide Last name");
             if (string.IsNullOrEmpty(Email)) yield return new ValidationResult("Please provide Email address");
             if (string.IsNullOrEmpty(Password)) yield return new ValidationResult("Please provide Password");
-            if (DateOfBirth != null && DateOfBirth.Value > DateTime.Now) yield return new ValidationResult("Date of birth cannot be a future date");
+            if (DateOfBirth.HasValue && DateOfBirth.Value > DateTime.Now) yield return new ValidationResult("Date of birth cannot be a future date");
             if (!string.IsNullOrEmpty(Password) && Password.Length < 10) yield return new ValidationResult("Please provide Password in at least 10 characters");
             if (string.IsNullOrEmpty(PassportNumber))
                 yield return new ValidationResult("Please provide Passport number");
@@ -46,7 +46,7 @@ namespace ReactUmbraco.ViewModels
             if (string.IsNullOrEmpty(Firstname)) yield return new ValidationResult("Please provide First name");
             if (string.IsNullOrEmpty(Lastname)) yield return new ValidationResult("Please provide Last name");
             if (string.IsNullOrEmpty(Email)) yield return new ValidationResult("Please provide Email address");
-            if (DateOfBirth != null && DateOfBirth.Value > DateTime.Now) yield return new ValidationResult("Date of birth cannot be a future date");
+            if (DateOfBirth.HasValue && DateOfBirth.Value > DateTime.Now) yield return new ValidationResult("Date of birth cannot be a future date");
 
             if (string.IsNullOrEmpty(PassportNumber))
                 yield return new ValidationResult("Please provide Passport number");
