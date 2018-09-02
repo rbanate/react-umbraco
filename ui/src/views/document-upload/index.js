@@ -1,19 +1,33 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { Redirect } from 'react-router-dom';
+
 import UploadDocuments from '../../components/uploadDocument';
 import { IdentityContext } from '../../ContextProvider';
+import MemberDetails from '../../components/memberProfile';
 
 const styles = () => ({
   root: {
     flexGrow: 1,
     alignItems: 'center',
+    maxWidth: 800,
+    margin: '20px auto',
+  },
+  capitalize: {
+    textTransform: 'capitalize',
+  },
+  card: {
+    minWidth: 275,
+  },
+  link: {
+    textDecoration: 'none',
+  },
+  withTopMargin: {
+    marginTop: '50px',
   },
 });
-
 class DocumentUpload extends React.Component {
   render() {
     const { classes } = this.props;
@@ -24,18 +38,16 @@ class DocumentUpload extends React.Component {
           if (!member) return <Redirect to="/" />;
           return (
             <div className={classes.root}>
+              <MemberDetails member={member} />
               <Grid
                 container
                 justify="center"
                 alignItems="center"
                 direction="column"
-                className={classes.root}
+                className={classes.withTopMargin}
               >
-                <Grid item xs={12} lg={4}>
-                  <Typography variant="title">Upload Documents</Typography>
-                </Grid>
-                <Grid item xs={12} lg={4}>
-                  <UploadDocuments username={member.Email} />
+                <Grid item xs={12}>
+                  {<UploadDocuments username={member.email} onSubmit={context.setMemberInfo} />}
                 </Grid>
               </Grid>
             </div>

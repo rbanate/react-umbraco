@@ -14,18 +14,18 @@ import Dropzone from 'react-dropzone';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
-import { Typography } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
 
-import { uploadDocuments } from '../utils/umbracoWrapper';
+import { uploadDocuments, getMember } from '../utils/umbracoWrapper';
 
 import ValidationType, { validationStatus } from '../utils/InputEnums';
 import { onChangeTriggerValidator } from '../utils/fieldValitors';
+import { OTHER_COUNTRIES } from '../utils/constants';
 
 const styles = theme => ({
   root: {
     display: 'flex',
     flexWrap: 'wrap',
-    alignItems: 'center',
   },
   margin: {
     margin: theme.spacing.unit,
@@ -36,22 +36,22 @@ const styles = theme => ({
   formControl: {
     margin: theme.spacing.unit,
     marginTop: '-20px',
+    width: '100%',
   },
   dropzone: {
-    width: 400,
     height: 50,
-    // marginLeft: '.5rem',
     borderWidth: 2,
     borderColor: 'rgb(102, 102, 102)',
     borderStyle: 'dashed',
     borderRadius: '5px',
     marginTop: '50px',
     cursor: 'default',
+    textAlign: 'center',
     padding: '5px',
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   },
   textField: {
-    flexBasis: 400,
-    width: 300,
+    flexBasis: 735,
   },
 
   wrapper: {
@@ -68,26 +68,25 @@ const styles = theme => ({
     },
   },
   buttonProgress: {
-    color: green[500],
-    position: 'absolute',
-    top: '50%',
-    left: '14%',
-    marginTop: -12,
-    marginLeft: -12,
+    color: green[100],
+  },
+
+  withBottomMargin: {
+    marginBottom: '20px',
   },
 });
 
 const docTypes = [
   {
-    value: '13',
+    value: 13,
     label: 'License',
   },
   {
-    value: '14',
+    value: 14,
     label: 'Passport (Australian citizen)',
   },
   {
-    value: '15',
+    value: 15,
     label: 'Passport (Other countries)',
   },
 ];
@@ -101,7 +100,7 @@ class UploadDocument extends React.Component {
   state = {
     form: {
       email: undefined,
-      documentType: '14',
+      documentType: '',
       mandatoryDocuments: undefined,
       supportingDocuments: undefined,
       otherDocuments: undefined,
@@ -114,6 +113,7 @@ class UploadDocument extends React.Component {
 
     saving: false,
     submitted: false,
+    error: false,
     validForm: validationStatus.Failed,
   };
 
@@ -212,7 +212,11 @@ class UploadDocument extends React.Component {
         form[stateName] = event.target.value;
       }
     );
-    if (stateName === 'documentType' && event.target.value === '15' && !form.supportingDocuments) {
+    if (
+      stateName === 'documentType' &&
+      event.target.value === OTHER_COUNTRIES &&
+      !form.supportingDocuments
+    ) {
       validators.supportingDocuments = validationStatus.Failed;
     } else {
       form.supportingDocuments = undefined;
@@ -224,6 +228,8 @@ class UploadDocument extends React.Component {
 
   handleSubmit = () => {
     const { form, validators } = this.state;
+    const { onSubmit } = this.props;
+
     this.validate(form, validators);
     const { validForm } = this.state;
     if (validForm === validationStatus.Success) {
@@ -233,6 +239,15 @@ class UploadDocument extends React.Component {
         if (error) {
           this.setState({ saving: false, validForm: false });
         } else {
+          getMember(form.email)
+            .then(response => {
+              onSubmit(JSON.parse(response.data.memberInfo));
+              return this.setState({ saving: false, submitted: true });
+            })
+            .catch(error => {
+              this.setState({ error });
+            });
+
           this.setState({ saving: false, submitted: true });
         }
       });
@@ -250,27 +265,42 @@ class UploadDocument extends React.Component {
         break;
       }
     }
-
-      this.setState({ validators, form, validForm: status });
-
+    /* eslint-enable */
+    this.setState({ validators, form, validForm: status });
   };
 
-  renderDocs = (source) => {
-    if(!source) return null;
+  renderDocs = source => {
+    if (!source) return null;
 
-    const docs = source.map((doc, i) => <Typography key={`doc-${i}`}variant="body2" color="primary">{doc.fileName}</Typography>)
+    const docs = source.map((doc, i) => (
+      <Typography key={`doc-${i}`} variant="body2" color="primary">
+        {doc.fileName}
+      </Typography>
+    ));
     return docs;
-  }
+  };
 
   render() {
     const { classes } = this.props;
-    const { form, validForm, saving, submitted } = this.state;
-    const showSupportingDocs = form.documentType === '15';
-    // if(submitted) return <Redirect to="/document-upload" />;
+    const { form, saving, submitted, validForm, error } = this.state;
+    const showSupportingDocs = form.documentType === OTHER_COUNTRIES;
+
+    if (submitted) return <Redirect to="/profile" />;
 
     return (
       <Fragment>
         <div className={classes.root}>
+          <div style={{ margin: '.5rem' }}>
+            <Typography variant="title">Upload Documents</Typography>
+            <Typography color="textSecondary" className={classes.withBottomMargin}>
+              Select your preferred Document Type then Drag and Drop or select the files you wish to
+              upload.{' '}
+              <i>
+                Note: Passport (Other Countries) - You may upload either Utility bill or Rent
+                Receipt
+              </i>{' '}
+            </Typography>
+          </div>
           <TextField
             select
             label="Document Type"
@@ -278,10 +308,19 @@ class UploadDocument extends React.Component {
             name="documentType"
             value={form.documentType}
             className={classNames(classes.margin, classes.textField)}
-            value={form.documentType}
             InputProps={{
-              onChange: event => this.requriedFieldChange(event, event.target.name, ValidationType.Number, undefined),
-              startAdornment: <InputAdornment position="start"><ReaderIcon /></InputAdornment>,
+              onChange: event =>
+                this.requriedFieldChange(
+                  event,
+                  event.target.name,
+                  ValidationType.Number,
+                  undefined
+                ),
+              startAdornment: (
+                <InputAdornment position="start">
+                  <ReaderIcon />
+                </InputAdornment>
+              ),
             }}
           >
             {docTypes.map(option => (
@@ -290,31 +329,58 @@ class UploadDocument extends React.Component {
               </MenuItem>
             ))}
           </TextField>
-        {form.documentType && (
-        <FormControl className={classes.formControl}>
-          <InputLabel htmlFor="mandatoryDocs">Mandatory Documents</InputLabel>
-          <Dropzone id="mandatoryDocs" accept="application/pdf, image/jpeg, image/png" className={classes.dropzone} onDrop={(acceptedFiles)=> this.onDropMandatoryDocs(acceptedFiles)}>
-            <p>{getDocTypeLabel(form.documentType)}</p>
-          </Dropzone>
-          <FormHelperText component="div">{this.renderDocs(form.mandatoryDocuments)}</FormHelperText>
-        </FormControl>)}
-        {showSupportingDocs && (
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="supportingDocs">Supporting Documents</InputLabel>
-            <Dropzone id="supportingDocs" accept="application/pdf, image/jpeg, image/png" className={classes.dropzone} onDrop={(acceptedFiles)=> this.onDropopSupportingDocs(acceptedFiles)}>
-              <p>Drag and Drop your Utility bill or Rent receipt</p>
-            </Dropzone>
-            <FormHelperText component="div">{this.renderDocs(form.supportingDocuments)}</FormHelperText>
-        </FormControl>
-        )}
-
+          {form.documentType && (
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="mandatoryDocs">Mandatory Documents</InputLabel>
+              <Dropzone
+                id="mandatoryDocs"
+                accept="application/pdf, image/jpeg, image/png"
+                className={classes.dropzone}
+                onDrop={acceptedFiles => this.onDropMandatoryDocs(acceptedFiles)}
+              >
+                <p>{getDocTypeLabel(form.documentType)}</p>
+              </Dropzone>
+              <FormHelperText component="div">
+                {this.renderDocs(form.mandatoryDocuments)}
+              </FormHelperText>
+            </FormControl>
+          )}
+          {showSupportingDocs && (
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="supportingDocs">Supporting Documents</InputLabel>
+              <Dropzone
+                id="supportingDocs"
+                accept="application/pdf, image/jpeg, image/png"
+                className={classes.dropzone}
+                onDrop={acceptedFiles => this.onDropopSupportingDocs(acceptedFiles)}
+              >
+                <p>Drag and Drop your Utility bill or Rent receipt</p>
+              </Dropzone>
+              <FormHelperText component="div">
+                {this.renderDocs(form.supportingDocuments)}
+              </FormHelperText>
+            </FormControl>
+          )}
         </div>
+        {error && (
+          <Typography color="error" className={classes.margin}>
+            An error has occured
+          </Typography>
+        )}
         <div className={classes.wrapper}>
-          <Button variant="contained" color="secondary" className={classes.buttonSuccess} disabled={validForm === validationStatus.Failed || saving} onClick={this.handleSubmit}>
-            {!saving ? 'Upload Documents' :'Uploading Documents'}
+          <Button
+            variant="contained"
+            color="secondary"
+            disabled={validForm === validationStatus.Failed}
+            className={classes.buttonSuccess}
+            onClick={this.handleSubmit}
+          >
+            {!saving ? (
+              'Upload Documents'
+            ) : (
+              <CircularProgress size={24} className={classes.buttonProgress} />
+            )}
           </Button>
-          {saving && <CircularProgress size={24} className={classes.buttonProgress} />}
-
         </div>
       </Fragment>
     );
@@ -324,6 +390,7 @@ class UploadDocument extends React.Component {
 UploadDocument.propTypes = {
   classes: PropTypes.object.isRequired,
   username: PropTypes.string.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(UploadDocument);

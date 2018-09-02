@@ -20,6 +20,21 @@ export const registerMember = member => {
     }).then(response => response);
   } catch (error) {
     console.log(error);
+    return error;
+  }
+};
+
+export const updateMember = member => {
+  if (!member) throw Error('Member information not set');
+  try {
+    return Axios.post(`${UMBRACO_API}updatemember`, JSON.stringify(member), {
+      headers: {
+        'Content-Type': 'application/json;charset=UTF-8',
+      },
+    }).then(response => response);
+  } catch (error) {
+    console.log(error);
+    return error;
   }
 };
 

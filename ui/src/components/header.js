@@ -50,38 +50,51 @@ class Header extends React.Component {
     const { classes } = this.props;
     const { showLogin } = this.state;
 
-    /* eslint-disable */
     return (
       <IdentityContext.Consumer>
         {context => {
           const loggedIn = context.member !== undefined;
-          return (<div className={classes.root}>
-            <AppBar position="static">
-              <Toolbar>
-                <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
-                <Link className={classes.link} to="/"><HomeIcon /></Link>
+          return (
+            <div className={classes.root}>
+              <AppBar position="static">
+                <Toolbar>
+                  <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
+                    <Link className={classes.link} to="/">
+                      <HomeIcon />
+                    </Link>
+                  </IconButton>
+                  <Typography variant="title" color="inherit" align="left" className={classes.flex}>
+                    Identity Portal
+                  </Typography>
 
-                </IconButton>
-                <Typography variant="title" color="inherit" className={classes.flex}>
-                  Identity Portal
-                </Typography>
+                  {loggedIn && (
+                    <Link className={classes.link} to="/document-upload">
+                      {' '}
+                      <Button color="inherit">Upload Documents</Button>
+                    </Link>
+                  )}
 
-               { loggedIn && (<Link className={classes.link} to="/document-upload"> <Button color="inherit" >
-                Upload Documents
-                </Button></Link>)
-                }
-
-                {!loggedIn && (
-                <Button color="inherit" onClick={this.showHideLogin}>
-                  Login
-                </Button>)}
-                {loggedIn && (
-                  <Link className={classes.link} to="/profile" title="View Profile"><ProfileIcon /></Link>)
-                }
-              </Toolbar>
-            </AppBar>
-            {showLogin && <Login open={showLogin} onClose={this.showHideLogin} onSubmit={context.setMemberInfo} />}
-          </div>)
+                  {!loggedIn && (
+                    <Button color="inherit" onClick={this.showHideLogin}>
+                      Login
+                    </Button>
+                  )}
+                  {loggedIn && (
+                    <Link className={classes.link} to="/profile" title="View Profile">
+                      <ProfileIcon />
+                    </Link>
+                  )}
+                </Toolbar>
+              </AppBar>
+              {showLogin && (
+                <Login
+                  open={showLogin}
+                  onClose={this.showHideLogin}
+                  onSubmit={context.setMemberInfo}
+                />
+              )}
+            </div>
+          );
         }}
       </IdentityContext.Consumer>
     );

@@ -7,13 +7,20 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import { Typography } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import green from '@material-ui/core/colors/green';
+import { Typography, withStyles } from '@material-ui/core';
 
 import { onChangeTriggerValidator } from '../utils/fieldValitors';
 import ValidationType, { validationStatus } from '../utils/InputEnums';
 import { validateUser, getMember } from '../utils/umbracoWrapper';
 
-export default class Login extends React.Component {
+const styles = () => ({
+  buttonProgress: {
+    color: green[100],
+  },
+});
+class Login extends React.Component {
   state = {
     form: {
       username: '',
@@ -24,6 +31,7 @@ export default class Login extends React.Component {
       password: validationStatus.Failed,
     },
     invalidUser: undefined,
+    submitting: false,
     validForm: validationStatus.Failed,
   };
 
@@ -38,8 +46,8 @@ export default class Login extends React.Component {
         break;
       }
     }
-
-      this.setState({ validators, form, validForm: status });
+    /* eslint-enable */
+    this.setState({ validators, form, validForm: status });
   };
 
   requriedFieldChange = (event, stateName, type, stateNameEqualTo) => {
@@ -60,27 +68,33 @@ export default class Login extends React.Component {
     this.validate(form, validators);
   };
 
+  handleKeydown = event => {
+    if (event.keyCode === 13) {
+      this.handleSubmit();
+    }
+  };
+
   handleSubmit = () => {
-    const { validForm, form} = this.state;
+    const { validForm, form } = this.state;
     const { onSubmit, onClose } = this.props;
-    if(!validForm) return;
+    if (!validForm) return;
+    this.setState({ submitting: true });
     validateUser(form).then(result => {
-      const {validUser} = result.data;
-      if(validUser) {
+      const { validUser } = result.data;
+      if (validUser) {
         getMember(form.username).then(response => {
-           onSubmit(response.data.memberInfo);
-           return onClose();
-        }
-        );
+          onSubmit(JSON.parse(response.data.memberInfo));
+          this.setState({ submitting: false });
+          return onClose();
+        });
       } else {
-        this.setState({invalidUser: true});
+        this.setState({ invalidUser: true, submitting: false });
       }
     });
-
   };
   render() {
-    const { open, onClose } = this.props;
-    const{validators, validForm, invalidUser, form} = this.state;
+    const { open, onClose, classes } = this.props;
+    const { validators, validForm, invalidUser, form, submitting } = this.state;
     return (
       <div>
         <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
@@ -90,11 +104,11 @@ export default class Login extends React.Component {
               Please input your username and password then click Login.
             </DialogContentText>
             <TextField
-              autoFocus
               margin="dense"
               id="username"
               label="Email Address"
               type="email"
+              autoFocus
               value={form.username}
               error={validators.username === validationStatus.Failed}
               fullWidth
@@ -105,7 +119,6 @@ export default class Login extends React.Component {
               }}
             />
             <TextField
-              autoFocus
               margin="dense"
               id="password"
               type="password"
@@ -116,16 +129,30 @@ export default class Login extends React.Component {
               inputProps={{
                 onChange: event =>
                   this.requriedFieldChange(event, event.target.id, ValidationType.Length, 5),
+                onKeyDown: event => this.handleKeydown(event),
               }}
             />
-            {invalidUser && <Typography variant="body2" color="error">Invalid Username or password</Typography>}
+            {invalidUser && (
+              <Typography variant="body2" color="error">
+                Invalid Username or password
+              </Typography>
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} color="primary">
               Cancel
             </Button>
-            <Button color="primary" onClick={this.handleSubmit} disabled={validForm === validationStatus.Failed}>
-              Login
+            <Button
+              color="primary"
+              onClick={this.handleSubmit}
+              type="submit"
+              disabled={validForm === validationStatus.Failed}
+            >
+              {!submitting ? (
+                'Login'
+              ) : (
+                <CircularProgress size={24} className={classes.buttonProgress} />
+              )}
             </Button>
           </DialogActions>
         </Dialog>
@@ -138,4 +165,7 @@ Login.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
+
+export default withStyles(styles)(Login);

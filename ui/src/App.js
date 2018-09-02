@@ -3,8 +3,6 @@ import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import routes from './routes/';
 
-import './App.css';
-
 import Header from './components/header';
 import IdentityProvider from './ContextProvider';
 

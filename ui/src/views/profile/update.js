@@ -5,7 +5,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { Redirect } from 'react-router-dom';
 
-import RegistrationForm from '../../components/registrationForm';
+import UpdateProfileForm from '../../components/updateProfile';
 import { IdentityContext } from '../../ContextProvider';
 
 const styles = () => ({
@@ -16,21 +16,21 @@ const styles = () => ({
   },
 });
 
-class Register extends React.Component {
+class UpdateProfile extends React.Component {
   render() {
     const { classes } = this.props;
-
+    console.log('what');
     return (
       <IdentityContext.Consumer>
         {context => {
           const { member } = context;
-          if (member) return <Redirect to="/document-upload" />;
+          if (!member) return <Redirect to="/" />;
           return (
             <div className={classes.root}>
               <Grid container justify="center" alignItems="center" direction="column">
                 <Grid item xs={12} lg={6}>
                   <Typography variant="title" align="center">
-                    Personal Information
+                    Update your Personal Information
                   </Typography>
                   <Typography variant="body2" color="textSecondary" align="center">
                     Input your details below to Register. After submitting, you may upload your
@@ -38,7 +38,7 @@ class Register extends React.Component {
                   </Typography>
                 </Grid>
                 <Grid item xs={12} lg={6}>
-                  <RegistrationForm onSubmit={context.setMemberInfo} />
+                  <UpdateProfileForm member={member} onSubmit={context.setMemberInfo} />
                 </Grid>
               </Grid>
             </div>
@@ -49,8 +49,8 @@ class Register extends React.Component {
   }
 }
 
-Register.propTypes = {
+UpdateProfile.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Register);
+export default withStyles(styles)(UpdateProfile);

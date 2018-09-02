@@ -7,10 +7,8 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import green from '@material-ui/core/colors/green';
-import { Typography } from '@material-ui/core';
 
-import { checkIfEmailExists, registerMember, getMember } from '../utils/umbracoWrapper';
-
+import { updateMember, getMember } from '../utils/umbracoWrapper';
 import ValidationType, { validationStatus } from '../utils/InputEnums';
 import { onChangeTriggerValidator } from '../utils/fieldValitors';
 
@@ -22,9 +20,7 @@ const styles = theme => ({
   margin: {
     margin: theme.spacing.unit,
   },
-  withoutLabel: {
-    marginTop: theme.spacing.unit * 3,
-  },
+
   textField: {
     flexBasis: 359,
   },
@@ -50,45 +46,37 @@ const styles = theme => ({
   },
 });
 
-class RegistrationForm extends React.Component {
+class UpdateProfileForm extends React.Component {
   state = {
-    form: {
-      firstname: '',
-      lastname: '',
-      email: '',
-      password: '',
-      dateOfBirth: '',
-      address: '',
-      passportNumber: '',
-    },
+    form: {},
     validators: {
-      firstname: validationStatus.Failed,
-      lastname: validationStatus.Failed,
-      email: validationStatus.Failed,
-      password: validationStatus.Failed,
-      passportNumber: validationStatus.Failed,
+      email: validationStatus.Success,
     },
-    emailExists: false,
     saving: false,
     submitted: false,
-    error: false,
-    validForm: validationStatus.Failed,
+    validForm: validationStatus.Success,
   };
 
+  componentWillMount() {
+    const { firstname, lastname, email, dateOfBirth, address, passportNumber } = this.props.member;
+
+    this.setState({
+      form: {
+        firstname,
+        lastname,
+        email,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : undefined,
+        address,
+        passportNumber,
+        validForm: validationStatus.Success,
+      },
+    });
+  }
   handleChange = (event, stateName) => {
     const { form } = this.state;
     form[stateName] = event.target.value;
 
     this.setState({ form: { ...form } });
-  };
-
-  handleKeydown = event => {
-    if (event.keyCode === 9) {
-      checkIfEmailExists(event.target.value).then(result => {
-        const { exists } = result.data;
-        this.setState({ emailExists: exists });
-      });
-    }
   };
 
   handleSubmit = () => {
@@ -98,19 +86,15 @@ class RegistrationForm extends React.Component {
     const { validForm } = this.state;
     if (validForm === validationStatus.Success) {
       this.setState({ saving: true });
-      registerMember(form).then(result => {
+      updateMember(form).then(result => {
         const { error } = result.data;
         if (error) {
-          this.setState({ saving: false, validForm: false, emailExists: true });
+          this.setState({ saving: false, validForm: false });
         } else {
-          getMember(form.email)
-            .then(response => {
-              onSubmit(JSON.parse(response.data.memberInfo));
-              return this.setState({ saving: false, submitted: true });
-            })
-            .catch(error => {
-              this.setState({ error });
-            });
+          getMember(form.email).then(response => {
+            onSubmit(JSON.parse(response.data.memberInfo));
+            return this.setState({ saving: false, submitted: true });
+          });
         }
       });
     }
@@ -152,9 +136,9 @@ class RegistrationForm extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { validators, form, validForm, emailExists, saving, submitted, error } = this.state;
+    const { validators, form, validForm, saving, submitted } = this.state;
 
-    if (submitted) return <Redirect to="/document-upload" />;
+    if (submitted) return <Redirect to="/profile" />;
 
     return (
       <Fragment>
@@ -163,9 +147,9 @@ class RegistrationForm extends React.Component {
             label="First name"
             id="firstname"
             value={form.firstname}
+            autoFocus
             required
             placeholder="Input your First name"
-            helperText="At lest 2 characters"
             error={validators.firstname === validationStatus.Failed}
             className={classNames(classes.margin, classes.textField)}
             inputProps={{
@@ -179,7 +163,6 @@ class RegistrationForm extends React.Component {
             value={form.lastname}
             required
             placeholder="Input your Last name"
-            helperText="At lest 2 characters"
             error={validators.lastname === validationStatus.Failed}
             className={classNames(classes.margin, classes.textField)}
             inputProps={{
@@ -187,41 +170,13 @@ class RegistrationForm extends React.Component {
                 this.requriedFieldChange(event, event.target.id, ValidationType.Length, 2),
             }}
           />
-          <TextField
-            label="Email Address"
-            type="email"
-            id="email"
-            value={form.email}
-            placeholder="Input your Email address"
-            helperText={emailExists ? 'Email already used' : undefined}
-            error={validators.email === validationStatus.Failed || emailExists}
-            required
-            inputProps={{
-              onChange: event =>
-                this.requriedFieldChange(event, event.target.id, ValidationType.Email, 5),
-              onKeyDown: event => this.handleKeydown(event),
-            }}
-            className={classNames(classes.margin, classes.textField)}
-          />
-          <TextField
-            label="Password"
-            type="password"
-            id="password"
-            value={form.password}
-            error={validators.password === validationStatus.Failed}
-            helperText="At lest 10 characters"
-            required
-            inputProps={{
-              onChange: event =>
-                this.requriedFieldChange(event, event.target.id, ValidationType.Length, 10),
-            }}
-            className={classNames(classes.margin, classes.textField)}
-          />
+
           <TextField
             label="Date of birth"
             type="date"
             id="dateOfBirth"
             value={form.dateOfBirth}
+            defaultValue={form.dateOfBirth}
             placeholder="Input your birth date"
             inputProps={{
               onChange: event => this.handleChange(event, event.target.id),
@@ -251,7 +206,6 @@ class RegistrationForm extends React.Component {
             value={form.passportNumber}
             required
             placeholder="Input your Passport number"
-            helperText="At lest 8 characters"
             error={validators.passportNumber === validationStatus.Failed}
             inputProps={{
               onChange: event =>
@@ -260,11 +214,6 @@ class RegistrationForm extends React.Component {
             className={classNames(classes.margin, classes.textField)}
           />
         </div>
-        {error && (
-          <Typography color="error" className={classes.margin}>
-            An error has occured
-          </Typography>
-        )}
         <div className={classes.wrapper}>
           <Button
             variant="contained"
@@ -276,7 +225,7 @@ class RegistrationForm extends React.Component {
             {saving ? (
               <CircularProgress size={24} className={classes.buttonProgress} />
             ) : (
-              'Register'
+              'Update Profile'
             )}
           </Button>
         </div>
@@ -285,9 +234,10 @@ class RegistrationForm extends React.Component {
   }
 }
 
-RegistrationForm.propTypes = {
+UpdateProfileForm.propTypes = {
   classes: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  member: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(RegistrationForm);
+export default withStyles(styles)(UpdateProfileForm);

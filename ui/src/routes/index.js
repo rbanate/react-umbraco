@@ -1,7 +1,7 @@
 import DocumentUpload from '../views/document-upload';
 import Home from '../views/registration';
 import Profile from '../views/profile';
-import Test from '../views/contextTest';
+import UpdateProfile from '../views/profile/update';
 
 const indexRoutes = [
   {
@@ -9,15 +9,16 @@ const indexRoutes = [
     name: 'Upload Documents',
     component: DocumentUpload,
   },
-  {
-    path: '/test',
-    name: 'test',
-    component: Test,
-  },
+
   {
     path: '/profile',
-    name: 'Login',
+    name: 'Profile',
     component: Profile,
+  },
+  {
+    path: '/update',
+    name: 'Update Profile',
+    component: UpdateProfile,
   },
   {
     path: '/',

@@ -3,32 +3,10 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
-import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
-import IconButton from '@material-ui/core/IconButton';
-import InfoIcon from '@material-ui/icons/Info';
 
 import { cleanJson } from '../utils/stringUtils';
-import { UMBRACO_URL } from '../utils/constants';
-// import tileData from './tileData';
-
-// const tileData = [
-//   {
-//     img: 'http://umbraco.local/media/1001/3401688_vendor_pic.jpg',
-//     title: 'test',
-//     author: 'test',
-//   },
-//   {
-//     img: 'http://umbraco.local/media/1001/3401688_vendor_pic.jpg',
-//     title: 'test',
-//     author: 'test',
-//   },
-//   {
-//     img: 'http://umbraco.local/media/1001/3401688_vendor_pic.jpg',
-//     title: 'test',
-//     author: 'test',
-//   },
-// ];
+import { UMBRACO_URL, NOT_SET } from '../utils/constants';
 
 const styles = theme => ({
   root: {
@@ -37,55 +15,37 @@ const styles = theme => ({
     justifyContent: 'space-around',
     overflow: 'hidden',
     backgroundColor: theme.palette.background.paper,
+    marginTop: '20px',
   },
-  gridList: {
-    width: 500,
-    height: 450,
-  },
+
   icon: {
     color: 'rgba(255, 255, 255, 0.54)',
   },
 });
 
-/**
- * The example data is structured as follows:
- *
- * import image from 'path/to/image.jpg';
- * [etc...]
- *
- * const tileData = [
- *   {
- *     img: image,
- *     title: 'Image',
- *     author: 'author',
- *   },
- *   {
- *     [etc...]
- *   },
- * ];
- */
 const DocumentsViewer = props => {
   const { classes, title, data } = props;
-
-  /* eslint no-eval: "off" */
-  /* eslint-env browser */
-  /* TODO: Should not use eval */
-
+  console.log(data.length === 0);
   return (
     <div className={classes.root}>
-      <GridList cellHeight={180} className={classes.gridList}>
+      <GridList cellHeight={180}>
         <GridListTile key="Subheader" cols={2} style={{ height: 'auto' }}>
-          <ListSubheader component="div">{title}</ListSubheader>
+          <ListSubheader component="div">
+            {data.length === 0 ? `${title} ${NOT_SET}` : title}
+          </ListSubheader>
         </GridListTile>
+
         {data.map(doc => {
           const cleaned = cleanJson(doc);
           return (
             <GridListTile key={cleaned.src}>
-              <img src={`${UMBRACO_URL}${cleaned.src}`} alt={cleaned.src} />
-              {/* <GridListTileBar
-              title={doc.Filename}
-
-            /> */}
+              {cleaned.src.includes('.pdf') ? (
+                <a href={`${UMBRACO_URL}${cleaned.src}`} target="_blank" rel="noopener noreferrer">
+                  {`${UMBRACO_URL}${cleaned.src}`}
+                </a>
+              ) : (
+                <img src={`${UMBRACO_URL}${cleaned.src}`} alt={cleaned.src} />
+              )}
             </GridListTile>
           );
         })}
