@@ -4,7 +4,9 @@ import UMBRACO_API from './constants';
 export const checkIfEmailExists = email => {
   if (!email) return null;
   try {
-    return Axios.get(`${UMBRACO_API}memberexists?username=${email}`).then(response => response);
+    return Axios.get(`${UMBRACO_API}memberexists?username=${email}`)
+      .then(response => response)
+      .catch(error => error);
   } catch (error) {
     console.log(error);
   }
@@ -17,7 +19,9 @@ export const registerMember = member => {
       headers: {
         'Content-Type': 'application/json;charset=UTF-8',
       },
-    }).then(response => response);
+    })
+      .then(response => response)
+      .catch(error => error);
   } catch (error) {
     console.log(error);
     return error;
@@ -58,7 +62,9 @@ export const validateUser = login => {
       headers: {
         'Content-Type': 'application/json;charset=UTF-8',
       },
-    }).then(response => response);
+    })
+      .then(response => response)
+      .catch(error => ({ data: error }));
   } catch (error) {
     console.log(error);
   }
@@ -68,20 +74,6 @@ export const getMember = email => {
   if (!email) throw Error('Username information not set');
   try {
     return Axios.get(`${UMBRACO_API}getmember?email=${email}`).then(response => response);
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-export const testUpload = file => {
-  if (!file) throw Error('Member information not set');
-  console.log(JSON.stringify(file));
-  try {
-    return Axios.post(`${UMBRACO_API}docupload`, JSON.stringify(file), {
-      headers: {
-        'Content-Type': 'application/json;charset=UTF-8',
-      },
-    }).then(response => response);
   } catch (error) {
     console.log(error);
   }

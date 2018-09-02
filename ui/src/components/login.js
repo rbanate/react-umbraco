@@ -80,7 +80,7 @@ class Login extends React.Component {
     if (!validForm) return;
     this.setState({ submitting: true });
     validateUser(form).then(result => {
-      const { validUser } = result.data;
+      const { validUser, ...rest } = result.data;
       if (validUser) {
         getMember(form.username).then(response => {
           onSubmit(JSON.parse(response.data.memberInfo));
@@ -88,13 +88,13 @@ class Login extends React.Component {
           return onClose();
         });
       } else {
-        this.setState({ invalidUser: true, submitting: false });
+        this.setState({ invalidUser: true, submitting: false, error: rest });
       }
     });
   };
   render() {
     const { open, onClose, classes } = this.props;
-    const { validators, validForm, invalidUser, form, submitting } = this.state;
+    const { validators, validForm, invalidUser, form, submitting, error } = this.state;
     return (
       <div>
         <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
@@ -132,9 +132,15 @@ class Login extends React.Component {
                 onKeyDown: event => this.handleKeydown(event),
               }}
             />
-            {invalidUser && (
-              <Typography variant="body2" color="error">
-                Invalid Username or password
+            {invalidUser &&
+              !error && (
+                <Typography variant="body2" color="error">
+                  Invalid Username or password
+                </Typography>
+              )}
+            {error && (
+              <Typography color="error" className={classes.margin}>
+                An error has occured, please check your API endpoints
               </Typography>
             )}
           </DialogContent>

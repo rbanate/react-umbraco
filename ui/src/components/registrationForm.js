@@ -84,10 +84,14 @@ class RegistrationForm extends React.Component {
 
   handleKeydown = event => {
     if (event.keyCode === 9) {
-      checkIfEmailExists(event.target.value).then(result => {
-        const { exists } = result.data;
-        this.setState({ emailExists: exists });
-      });
+      checkIfEmailExists(event.target.value)
+        .then(result => {
+          const { exists } = result.data;
+          if (exists !== undefined) {
+            this.setState({ emailExists: exists });
+          }
+        })
+        .catch(error => this.setState({ error }));
     }
   };
 
@@ -98,21 +102,23 @@ class RegistrationForm extends React.Component {
     const { validForm } = this.state;
     if (validForm === validationStatus.Success) {
       this.setState({ saving: true });
-      registerMember(form).then(result => {
-        const { error } = result.data;
-        if (error) {
-          this.setState({ saving: false, validForm: false, emailExists: true });
-        } else {
-          getMember(form.email)
-            .then(response => {
-              onSubmit(JSON.parse(response.data.memberInfo));
-              return this.setState({ saving: false, submitted: true });
-            })
-            .catch(error => {
-              this.setState({ error });
-            });
-        }
-      });
+      registerMember(form)
+        .then(result => {
+          const { error } = result.data;
+          if (error) {
+            this.setState({ saving: false, validForm: false, emailExists: true });
+          } else {
+            getMember(form.email)
+              .then(response => {
+                onSubmit(JSON.parse(response.data.memberInfo));
+                return this.setState({ saving: false, submitted: true });
+              })
+              .catch(error => {
+                this.setState({ error });
+              });
+          }
+        })
+        .catch(error => this.setState({ error, saving: false, submitted: false }));
     }
   };
 
@@ -262,7 +268,7 @@ class RegistrationForm extends React.Component {
         </div>
         {error && (
           <Typography color="error" className={classes.margin}>
-            An error has occured
+            An error has occured, please check your API endpoints
           </Typography>
         )}
         <div className={classes.wrapper}>
